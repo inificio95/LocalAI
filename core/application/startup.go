@@ -231,6 +231,13 @@ func New(opts ...config.AppOption) (*Application, error) {
 		xlog.Error("error registering external backends", "error", err)
 	}
 
+	// Start background upgrade checker for backends
+	if len(options.BackendGalleries) > 0 {
+		uc := NewUpgradeChecker(options, application.ModelLoader())
+		application.upgradeChecker = uc
+		go uc.Run(options.Context)
+	}
+
 	if options.ConfigFile != "" {
 		if err := application.ModelConfigLoader().LoadMultipleModelConfigsSingleFile(options.ConfigFile, configLoaderOpts...); err != nil {
 			xlog.Error("error loading config file", "error", err)
